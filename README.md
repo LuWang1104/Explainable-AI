@@ -1,8 +1,10 @@
 # gomoku-ai
-CS152 AI Final Assignment
+Based On https://github.com/ZitongMao/gomoku-ai
+
+"CS152 AI Final Assignment
 
 To run the program, type:
 ```
 python game.py
 ```
-in terminal.
+in terminal."(Zitong, 2017)
