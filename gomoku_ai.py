@@ -249,6 +249,7 @@ class gomokuAI(object):
                 #### first parameter of gomoku is the state of whole board 
                 nextPlay = gomokuAI(deepcopy(self.__gomoku), nextState,
                                     self.__depth - 1)
+                
                 nextPlay.set_board(i, j, self.__currentState)
 
                 frontierList.append((nextPlay, i, j))
@@ -257,43 +258,52 @@ class gomokuAI(object):
 
         frontierScores = []
         for node in frontierList:
+            ## node[1] is i and node[2] is j, since frontierList.append((nextPlay, i, j))
+            ## input the location(i,j) to function 'evaluate_point' to get score  
             frontierScores.append(self.evaluate_point(node[1], node[2]))
 
         frontierZipped = zip(frontierList, frontierScores)
         frontierSorted = sorted(frontierZipped, key=lambda t: t[1])
         (frontierList, frontierScores) = zip(*frontierSorted)
+        ## has been sorted
         return frontierList
 
     def negate(self):
         return -self.evaluate()
 
     def evaluate(self):
+        
+        #### ?????? why use board score
         '''
         Return the board score for Minimax Search.
         '''
         #exhaustive search
         vectors = []
-
+        ## get all rows
         for i in range(N):
             vectors.append(self.__gomoku.get_chessMap()[i])
 
-        
+        ## get all columns
         for j in range(N):
             vectors.append([self.__gomoku.get_chessMap()[i][j] for i in
                            range(N)])
-
+        ## get  diagonal / line
         vectors.append([self.__gomoku.get_chessMap()[x][x] for x in
                        range(N)])
        
-        
+        ## get all / lines without including last 4 ,3 2, 1 whcih is smaller than 5
         for i in range(1, N - 4):
+            ## for all / below diagonal 
             v = [self.__gomoku.get_chessMap()[x][x - i] for x in
                  range(i, N)]
             vectors.append(v)
+            
+            ## for all / above diagonal
             v = [self.__gomoku.get_chessMap()[y - i][y] for y in
                  range(i, N)]
             vectors.append(v)
-
+        
+        ## get diagonal \ line
         vectors.append([self.__gomoku.get_chessMap()[x][N - x - 1]
                        for x in range(N)])
 
@@ -314,6 +324,7 @@ class gomokuAI(object):
         for v in vectors:
             score = evaluate_vector(v)
             if self.__currentState == BoardState.WHITE:
+                ## the case that a line include white and black pieces
                 board_score += score['black'] - score['white']
             else:
                 board_score += score['white'] - score['black']
