@@ -9,7 +9,8 @@ from gomoku import Gomoku
 
 
 class gomokuAI(object):
-
+    
+    ## currentstate is just black or white
     def __init__(
         self,
         gomoku,
@@ -226,9 +227,11 @@ class gomokuAI(object):
         '''
         Generate a list of available points for searching.
         '''
+        ## store the nodes
         frontierList = []
         for i in range(N):
             for j in range(N):
+                ## just consider empty 
                 if self.__gomoku.get_chessMap()[i][j] \
                     != BoardState.EMPTY:
                     continue  # only search for available spots
@@ -242,6 +245,8 @@ class gomokuAI(object):
                     nextState = BoardState.WHITE
 
                 #depth -1 every time
+                
+                #### first parameter of gomoku is the state of whole board 
                 nextPlay = gomokuAI(deepcopy(self.__gomoku), nextState,
                                     self.__depth - 1)
                 nextPlay.set_board(i, j, self.__currentState)
@@ -364,10 +369,13 @@ class gomokuAI(object):
         self,
         ai,
         alpha=-10000000,
+        
+        ## why it is 10000000
         beta=10000000,
         ):
-
+        ## 
         if ai.__depth <= 0:
+            ## negate min max score
             score = ai.negate()
             return score
 
@@ -375,6 +383,9 @@ class gomokuAI(object):
 
         # for (nextPlay, i, j) in ai.generate()[:20]:
         for (nextPlay, i, j) in ai.generate():
+            ## negate alpha???
+            ## Since '-' every time it is different
+                                                         ## why - beta, - alpha
             temp_score = -self.alpha_beta_prune(nextPlay, -beta, -alpha)
             if temp_score > beta:
                 return beta
@@ -382,7 +393,9 @@ class gomokuAI(object):
                 alpha = temp_score
                 (ai.__currentI, ai.__currentJ) = (i, j)
         return alpha
-
+        ## no alpha > beta
+    
+        
     def first_step(self):
         #AI plays in the center
         self.__gomoku.set_chessboard_state(7, 7, self.__currentState)
@@ -407,7 +420,7 @@ class gomokuAI(object):
                 if not self.has_neighbor(self.__gomoku.get_chessMap()[i][j],
                         i, j):
                     continue
-
+                ## Firstly check self, then check opponent ???
                 if self.has_check(self.__currentState, i, j):
                     print ('has check, checking if opponent already has one...')
 
@@ -417,7 +430,7 @@ class gomokuAI(object):
                         print ('not safe, searching other moves...')
                     elif self.opponent_has_checkmate(self.__currentState) \
                         is False:
-
+                        ## set a move
                         print ('safe')
                         self.__gomoku.set_chessboard_state(i, j,
                                 self.__currentState)
@@ -441,7 +454,3 @@ class gomokuAI(object):
                         self.__currentState)
                 return True
         return False
-
-
-
-            
