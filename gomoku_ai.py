@@ -88,6 +88,7 @@ class gomokuAI(object):
         '''
 
         count = 0
+        fiveStore=[]#7022
         for step in range(1, 5):  # look four more steps on a certain direction
             if xdirection != 0 and (j + xdirection * step < 0 or j
                                     + xdirection * step >= N):
@@ -98,9 +99,11 @@ class gomokuAI(object):
             if self.__gomoku.get_chessMap()[i + ydirection * step][j
                     + xdirection * step] == state:
                 count += 1
+                fiveStore.append((i+ydirection * step,j + xdirection*step))#7022
+                
             else:
                 break
-        return count
+        return count,fiveStore
 
     def direction_pattern(
         self,
@@ -115,6 +118,7 @@ class gomokuAI(object):
         '''
 
         pattern = []
+        fourStore=[]#7022
         for step in range(-1, 5):  # generate a list with len 10
             if xdirection != 0 and (j + xdirection * step < 0 or j
                                     + xdirection * step >= N):
@@ -125,8 +129,10 @@ class gomokuAI(object):
 
             pattern.append(self.__gomoku.get_chessMap()[i + ydirection
                            * step][j + xdirection * step])
+            
+            fourStore.append((i+ydirection * step,j + xdirection*step))
 
-        return pattern
+        return pattern,fourStore
 
     def has_checkmate(
         self,
@@ -142,10 +148,23 @@ class gomokuAI(object):
 
         for axis in directions:
             axis_count = 1
+            fiveSpots=[]#7022
             for (xdirection, ydirection) in axis:
+                '''
                 axis_count += self.direction_count(i, j, xdirection,
                         ydirection, state)
+                '''
+                transfer_axis_count, transfer_fiveSpots= self.direction_count(i, j, xdirection,
+                        ydirection, state)#7022
+                
+                axis_count += transfer_axis_count#7022
+                
+                fiveSpots += transfer_fiveSpots#7022
+                
                 if axis_count >= 5:
+                    
+                    print('Five in a row:','(',i,',',j,') with',fiveSpots)#7022
+                    
                     return True
         return False
 
@@ -164,16 +183,31 @@ class gomokuAI(object):
 
         for axis in directions:
             currentPattern = []
+            fourStore=[]#7022
             for (xdirection, ydirection) in axis:
+                
+                #????why double add??????
+                '''
                 currentPattern += self.direction_pattern(i, j,
                         xdirection, ydirection, state)
+                '''
+                transfer_currentPattern, transfer_foureSpots= self.direction_pattern(i, j,
+                        xdirection, ydirection, state)#7022
+                
+                currentPattern += transfer_currentPattern#7022
+                
+                fourStore += transfer_foureSpots#7022
+                
+              
+                
                 if len(currentPattern) > 2:
                     currentPattern[1] = state
                 if enum_to_string(currentPattern) == WHITE_6PATTERNS[0]:
-                    return True
+                    
+                    return True, fourStore
                 if enum_to_string(currentPattern) == BLACK_6PATTERNS[0]:
-                    return True
-        return False
+                    return True, fourStore
+        return False, fourStore
 
     def opponent_has_checkmate(self, state):
         '''
@@ -249,7 +283,6 @@ class gomokuAI(object):
                 #### first parameter of gomoku is the state of whole board 
                 nextPlay = gomokuAI(deepcopy(self.__gomoku), nextState,
                                     self.__depth - 1)
-                
                 nextPlay.set_board(i, j, self.__currentState)
 
                 frontierList.append((nextPlay, i, j))
@@ -258,52 +291,43 @@ class gomokuAI(object):
 
         frontierScores = []
         for node in frontierList:
-            ## node[1] is i and node[2] is j, since frontierList.append((nextPlay, i, j))
-            ## input the location(i,j) to function 'evaluate_point' to get score  
             frontierScores.append(self.evaluate_point(node[1], node[2]))
 
         frontierZipped = zip(frontierList, frontierScores)
         frontierSorted = sorted(frontierZipped, key=lambda t: t[1])
         (frontierList, frontierScores) = zip(*frontierSorted)
-        ## has been sorted
         return frontierList
 
     def negate(self):
         return -self.evaluate()
 
     def evaluate(self):
-        
-        #### ?????? why use board score
         '''
         Return the board score for Minimax Search.
         '''
         #exhaustive search
         vectors = []
-        ## get all rows
+
         for i in range(N):
             vectors.append(self.__gomoku.get_chessMap()[i])
 
-        ## get all columns
+        
         for j in range(N):
             vectors.append([self.__gomoku.get_chessMap()[i][j] for i in
                            range(N)])
-        ## get  diagonal / line
+
         vectors.append([self.__gomoku.get_chessMap()[x][x] for x in
                        range(N)])
        
-        ## get all / lines without including last 4 ,3 2, 1 whcih is smaller than 5
+        
         for i in range(1, N - 4):
-            ## for all / below diagonal 
             v = [self.__gomoku.get_chessMap()[x][x - i] for x in
                  range(i, N)]
             vectors.append(v)
-            
-            ## for all / above diagonal
             v = [self.__gomoku.get_chessMap()[y - i][y] for y in
                  range(i, N)]
             vectors.append(v)
-        
-        ## get diagonal \ line
+
         vectors.append([self.__gomoku.get_chessMap()[x][N - x - 1]
                        for x in range(N)])
 
@@ -324,7 +348,6 @@ class gomokuAI(object):
         for v in vectors:
             score = evaluate_vector(v)
             if self.__currentState == BoardState.WHITE:
-                ## the case that a line include white and black pieces
                 board_score += score['black'] - score['white']
             else:
                 board_score += score['white'] - score['black']
@@ -385,22 +408,32 @@ class gomokuAI(object):
         beta=10000000,
         ):
         ## 
+        
         if ai.__depth <= 0:
             ## negate min max score
             score = ai.negate()
+            #print('Terminal-Node:','board-score',score*(-1),'node-depth:',ai.__depth)#7022
             return score
-
+        
         # only use the first 20 nodes
 
         # for (nextPlay, i, j) in ai.generate()[:20]:
         for (nextPlay, i, j) in ai.generate():
+            '''
+            print('father-node\'s beta-alpha:',beta,'&',alpha,'move:','(',i,',',j,')','player:',ai.__currentState,'node-depth', \
+                  nextPlay.__depth)#7022
+            '''
             ## negate alpha???
             ## Since '-' every time it is different
                                                          ## why - beta, - alpha
             temp_score = -self.alpha_beta_prune(nextPlay, -beta, -alpha)
+            #print('--------',temp_score,'!!!!beta-alpha',beta,alpha,' loc:',i,'-',j, \
+                  #nextPlay.__currentState,nextPlay.__depth)
             if temp_score > beta:
+                #print(temp_score,'> beta',beta)#7022
                 return beta
             if temp_score > alpha:
+                #print(temp_score,'> alpha:',alpha)#7022
                 alpha = temp_score
                 (ai.__currentI, ai.__currentJ) = (i, j)
         return alpha
@@ -421,7 +454,7 @@ class gomokuAI(object):
                     != BoardState.EMPTY:
                     continue  # only search for available spots
 
-                ## ??i ,j is a position which could be five in a row
+                ## ??i ,j is a position which could be five in a row,-----!!!1
                 if self.has_checkmate(self.__currentState, i, j):
                     print ('has checkmate')
                     self.__gomoku.set_chessboard_state(i, j,
@@ -432,7 +465,11 @@ class gomokuAI(object):
                         i, j):
                     continue
                 ## Firstly check self, then check opponent ???
-                if self.has_check(self.__currentState, i, j):
+                '''
+                if self.has_check(self.__currentState
+                '''
+                TrueOrFalse_hasCheck, fourStore=self.has_check(self.__currentState, i, j)#7022
+                if TrueOrFalse_hasCheck:
                     print ('has check, checking if opponent already has one...')
 
                     if self.opponent_has_checkmate(self.__currentState) \
@@ -443,6 +480,8 @@ class gomokuAI(object):
                         is False:
                         ## set a move
                         print ('safe')
+                        print('unbroken four in a row:',fourStore)
+                        #-------!!!!
                         self.__gomoku.set_chessboard_state(i, j,
                                 self.__currentState)
                         return True
@@ -452,9 +491,9 @@ class gomokuAI(object):
                         self.__depth)
         #???????????? will next step be changed
         score = self.alpha_beta_prune(node)
-        print (score)
+        
         (i, j) = (node.__currentI, node.__currentJ)
-
+        print ('score',score,' loc:',i,'-',j)
         # ??? is the next step an empty position
         if not i is None and not j is None:
             if self.__gomoku.get_chessboard_state(i, j) \
