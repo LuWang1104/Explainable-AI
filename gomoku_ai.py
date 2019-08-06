@@ -204,10 +204,13 @@ class gomokuAI(object):
                     currentPattern[1] = state
                 if enum_to_string(currentPattern) == WHITE_6PATTERNS[0]:
                     
-                    return True, fourStore
+                    return True, fourStore #7022
+                
                 if enum_to_string(currentPattern) == BLACK_6PATTERNS[0]:
-                    return True, fourStore
-        return False, fourStore
+                    
+                    return True, fourStore#7022
+                
+        return False, fourStore#7022
 
     def opponent_has_checkmate(self, state):
         '''
@@ -307,23 +310,26 @@ class gomokuAI(object):
         '''
         #exhaustive search
         vectors = []
-
+        
+        #row
         for i in range(N):
             vectors.append(self.__gomoku.get_chessMap()[i])
 
-        
+        #column
         for j in range(N):
             vectors.append([self.__gomoku.get_chessMap()[i][j] for i in
                            range(N)])
-
+        
         vectors.append([self.__gomoku.get_chessMap()[x][x] for x in
                        range(N)])
        
-        
+        #
         for i in range(1, N - 4):
+            # y=x dialogue below
             v = [self.__gomoku.get_chessMap()[x][x - i] for x in
                  range(i, N)]
             vectors.append(v)
+            # y=x dialogue above
             v = [self.__gomoku.get_chessMap()[y - i][y] for y in
                  range(i, N)]
             vectors.append(v)
@@ -409,11 +415,14 @@ class gomokuAI(object):
         ):
         ## 
         
+        steps=[]#7022
+        
         if ai.__depth <= 0:
             ## negate min max score
             score = ai.negate()
+            location=((None,None))##7022
             #print('Terminal-Node:','board-score',score*(-1),'node-depth:',ai.__depth)#7022
-            return score
+            return score,location##7022
         
         # only use the first 20 nodes
 
@@ -425,18 +434,42 @@ class gomokuAI(object):
             '''
             ## negate alpha???
             ## Since '-' every time it is different
-                                                         ## why - beta, - alpha
-            temp_score = -self.alpha_beta_prune(nextPlay, -beta, -alpha)
+            ## why - beta, - alpha
+                                                         
+            transfer_steps=[]
+            
+            transfer_score, transfer_location = self.alpha_beta_prune(nextPlay, -beta, -alpha)##7022
+            temp_score=-transfer_score
+            
+            transfer_steps += transfer_location#7022
             #print('--------',temp_score,'!!!!beta-alpha',beta,alpha,' loc:',i,'-',j, \
                   #nextPlay.__currentState,nextPlay.__depth)
+                  
+            
+                
             if temp_score > beta:
                 #print(temp_score,'> beta',beta)#7022
-                return beta
+                transfer_steps.append((i,j))#7022
+                
+                if nextPlay.__depth==1:   #7022
+                    steps.append(transfer_steps)  #7022
+                    return beta,steps##7022
+                else:
+                    return beta,transfer_steps##7022
+                
             if temp_score > alpha:
                 #print(temp_score,'> alpha:',alpha)#7022
                 alpha = temp_score
                 (ai.__currentI, ai.__currentJ) = (i, j)
-        return alpha
+                
+                transfer_steps.append((i,j))#7022
+                
+                if nextPlay.__depth==1:   #7022
+                    steps.append(transfer_steps)  #7022
+                else:
+                    steps=transfer_steps
+        return alpha,steps ##7022
+    
         ## no alpha > beta
     
         
@@ -480,7 +513,7 @@ class gomokuAI(object):
                         is False:
                         ## set a move
                         print ('safe')
-                        print('unbroken four in a row:',fourStore)
+                        print('unbroken four in a row:',fourStore)#####7022
                         #-------!!!!
                         self.__gomoku.set_chessboard_state(i, j,
                                 self.__currentState)
@@ -490,8 +523,8 @@ class gomokuAI(object):
         node = gomokuAI(self.__gomoku, self.__currentState,
                         self.__depth)
         #???????????? will next step be changed
-        score = self.alpha_beta_prune(node)
-        
+        score,steps = self.alpha_beta_prune(node)#7022
+        print('steps',steps)#7022
         (i, j) = (node.__currentI, node.__currentJ)
         print ('score',score,' loc:',i,'-',j)
         # ??? is the next step an empty position
