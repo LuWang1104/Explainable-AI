@@ -311,40 +311,52 @@ class gomokuAI(object):
         #exhaustive search
         vectors = []
         
+        
         #row
         for i in range(N):
-            vectors.append(self.__gomoku.get_chessMap()[i])
+            
+            #7022
+            row_locations=[]
+            for j in range(N):
+                row_locations.append((i,j))
+            #7022    
+                
+            vectors.append((self.__gomoku.get_chessMap()[i],row_locations))#7022
+            
+            
+            
 
         #column
         for j in range(N):
-            vectors.append([self.__gomoku.get_chessMap()[i][j] for i in
-                           range(N)])
+            vectors.append(([self.__gomoku.get_chessMap()[i][j] for i in
+                           range(N)],[(i,j)for i in range(N)])) #7022
         
-        vectors.append([self.__gomoku.get_chessMap()[x][x] for x in
-                       range(N)])
+        vectors.append(([self.__gomoku.get_chessMap()[x][x] for x in
+                       range(N)],[(x,x)for x in range(N)]))#7022
        
         #
         for i in range(1, N - 4):
             # y=x dialogue below
-            v = [self.__gomoku.get_chessMap()[x][x - i] for x in
-                 range(i, N)]
+            v = ([self.__gomoku.get_chessMap()[x][x - i] for x in
+                 range(i, N)],[(x,x-i)for x in range(i, N)]) #7022
             vectors.append(v)
             # y=x dialogue above
-            v = [self.__gomoku.get_chessMap()[y - i][y] for y in
-                 range(i, N)]
+            v = ([self.__gomoku.get_chessMap()[y - i][y] for y in
+                 range(i, N)],[(y-i,y) for y in range(i,N)])#7022
+                
             vectors.append(v)
 
-        vectors.append([self.__gomoku.get_chessMap()[x][N - x - 1]
-                       for x in range(N)])
+        vectors.append(([self.__gomoku.get_chessMap()[x][N - x - 1]
+                       for x in range(N)],[(x,N-x-1) for x in range(N)]))#7022
 
         
         
         for i in range(4, N - 1):
-            v = [self.__gomoku.get_chessMap()[x][i - x] for x in
-                 range(i, -1, -1)]
+            v = ([self.__gomoku.get_chessMap()[x][i - x] for x in
+                 range(i, -1, -1)],[(x,i-x) for x in range(i,-1,-1)])#7022
             vectors.append(v)
-            v = [self.__gomoku.get_chessMap()[x][N - x + N - i - 2]
-                 for x in range(N - i - 1, N)]
+            v = ([self.__gomoku.get_chessMap()[x][N - x + N - i - 2]
+                 for x in range(N - i - 1, N)],[(x,N - x + N - i - 2)for x in range(N - i - 1, N)])#7022
             vectors.append(v)
 
         board_score = 0
@@ -352,7 +364,8 @@ class gomokuAI(object):
        
         
         for v in vectors:
-            score = evaluate_vector(v)
+            
+            score = evaluate_vector_addLoc(v)
             if self.__currentState == BoardState.WHITE:
                 board_score += score['black'] - score['white']
             else:
@@ -414,7 +427,7 @@ class gomokuAI(object):
         beta=10000000,
         ):
         ## 
-        
+
         steps=[]#7022
         
         if ai.__depth <= 0:
