@@ -75,11 +75,14 @@ def enum_to_string(vector):
     return string_list
 
 
-def evaluate_vector(vector):
+def evaluate_vector(vector): 
     '''
     Return the score for a vector (line or column or diagonal)
     '''
+    
     string_list = enum_to_string(vector)
+    
+    
     score = {'white': 0, 'black': 0}
     length = len(string_list)
 
@@ -116,7 +119,50 @@ def evaluate_vector(vector):
                 score['black'] += BLACK_6SCORES[i]
     return score
 
+def evaluate_vector_addLoc(vector_value_locations): #7022
+    '''
+    Return the score for a vector (line or column or diagonal)
+    '''
+    vector=vector_value_locations[0]#7022
+    
+    string_list = enum_to_string(vector)
+    
+    
+    score = {'white': 0, 'black': 0}
+    length = len(string_list)
 
+    if length == 5:
+        for i in range(len(WHITE_5PATTERNS)):
+            if WHITE_5PATTERNS[i] == string_list:
+                score['white'] += WHITE_5SCORES[i]
+            if BLACK_5PATTERNS[i] == string_list:
+                score['black'] += BLACK_5SCORES[i]
+        return score
+
+    for i in range(length - 5):
+        temp = [string_list[i], string_list[i + 1], string_list[i + 2],
+                string_list[i + 3], string_list[i + 4]]
+        for i in range(len(WHITE_5PATTERNS)):
+            if WHITE_5PATTERNS[i] == temp:
+                score['white'] += WHITE_5SCORES[i]
+            if BLACK_5PATTERNS[i] == temp:
+                score['black'] += BLACK_5SCORES[i]
+
+    for i in range(length - 6):
+        temp = [
+            string_list[i],
+            string_list[i + 1],
+            string_list[i + 2],
+            string_list[i + 3],
+            string_list[i + 4],
+            string_list[i + 5],
+            ]
+        for i in range(len(WHITE_6PATTERNS)):
+            if WHITE_6PATTERNS[i] == temp:
+                score['white'] += WHITE_6SCORES[i]
+            if BLACK_6PATTERNS[i] == temp:
+                score['black'] += BLACK_6SCORES[i]
+    return score
 
       
 
