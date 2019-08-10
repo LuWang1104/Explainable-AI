@@ -124,29 +124,45 @@ def evaluate_vector_addLoc(vector_value_locations): #7022
     Return the score for a vector (line or column or diagonal)
     '''
     vector=vector_value_locations[0]#7022
+    loc_vec = vector_value_locations[1]#7022
     
     string_list = enum_to_string(vector)
     
     
     score = {'white': 0, 'black': 0}
+    
+    loc_pat_sco ={'white': [], 'black': []} #7022
+    
     length = len(string_list)
 
     if length == 5:
         for i in range(len(WHITE_5PATTERNS)):
             if WHITE_5PATTERNS[i] == string_list:
                 score['white'] += WHITE_5SCORES[i]
+                loc_pat_sco['white'].append((loc_vec,WHITE_5PATTERNS[i],WHITE_5SCORES[i]))#7022
+                
+                
             if BLACK_5PATTERNS[i] == string_list:
                 score['black'] += BLACK_5SCORES[i]
-        return score
+                loc_pat_sco['black'].append((loc_vec,BLACK_5PATTERNS[i],BLACK_5SCORES[i]))#7022
+        
+        return score,loc_pat_sco#####702270227022
 
     for i in range(length - 5):
         temp = [string_list[i], string_list[i + 1], string_list[i + 2],
                 string_list[i + 3], string_list[i + 4]]
+        
+        loc_temp=[loc_vec[i], loc_vec[i + 1], loc_vec[i + 2],
+                loc_vec[i + 3], loc_vec[i + 4]]#7022
+        
         for i in range(len(WHITE_5PATTERNS)):
             if WHITE_5PATTERNS[i] == temp:
                 score['white'] += WHITE_5SCORES[i]
+                loc_pat_sco['white'].append((loc_temp,WHITE_5PATTERNS[i],WHITE_5SCORES[i]))#7022
+                
             if BLACK_5PATTERNS[i] == temp:
                 score['black'] += BLACK_5SCORES[i]
+                loc_pat_sco['black'].append((loc_temp,BLACK_5PATTERNS[i],BLACK_5SCORES[i]))#7022
 
     for i in range(length - 6):
         temp = [
@@ -157,12 +173,20 @@ def evaluate_vector_addLoc(vector_value_locations): #7022
             string_list[i + 4],
             string_list[i + 5],
             ]
+        
+        loc_temp=[loc_vec[i], loc_vec[i + 1], loc_vec[i + 2],
+                loc_vec[i + 3], loc_vec[i + 4],loc_vec[i + 5]]#7022
+        
         for i in range(len(WHITE_6PATTERNS)):
             if WHITE_6PATTERNS[i] == temp:
                 score['white'] += WHITE_6SCORES[i]
+                loc_pat_sco['white'].append((loc_temp,WHITE_6PATTERNS[i],WHITE_6SCORES[i]))#7022
+                
             if BLACK_6PATTERNS[i] == temp:
                 score['black'] += BLACK_6SCORES[i]
-    return score
+                loc_pat_sco['black'].append((loc_temp,BLACK_6PATTERNS[i],BLACK_6SCORES[i]))#7022
+              
+    return score,loc_pat_sco#7022
 
       
 
