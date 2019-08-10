@@ -302,7 +302,9 @@ class gomokuAI(object):
         return frontierList
 
     def negate(self):
-        return -self.evaluate()
+        
+        score,loc_pat_sco=self.evaluate()
+        return -score,loc_pat_sco
 
     def evaluate(self):
         '''
@@ -362,15 +364,29 @@ class gomokuAI(object):
         board_score = 0
 
        
+        loc_pat_sco ={'white':[],'black':[]}
+        
         
         for v in vectors:
             
-            score = evaluate_vector_addLoc(v)
+            score,temp_loc_pat_sco = evaluate_vector_addLoc(v)
+            #print('scloc',score,'+',loc,'+',v)
+            
+            #7022
+            if score['black'] != 0:
+                loc_pat_sco['black'] += temp_loc_pat_sco['black']
+                
+            elif score['white'] != 0:
+                loc_pat_sco['white'] += temp_loc_pat_sco['white']
+            #7022
+            
+            
             if self.__currentState == BoardState.WHITE:
                 board_score += score['black'] - score['white']
             else:
                 board_score += score['white'] - score['black']
-        return board_score
+                
+        return board_score,loc_pat_sco
 
     def evaluate_point(self, i, j):
         '''
@@ -429,13 +445,14 @@ class gomokuAI(object):
         ## 
 
         steps=[]#7022
+        loc_pat_sco=[]
         
         if ai.__depth <= 0:
             ## negate min max score
-            score = ai.negate()
+            score,temp_loc_pat_sco = ai.negate()
             location=((None,None))##7022
             #print('Terminal-Node:','board-score',score*(-1),'node-depth:',ai.__depth)#7022
-            return score,location##7022
+            return score,location,temp_loc_pat_sco ##7022
         
         # only use the first 20 nodes
 
@@ -451,7 +468,8 @@ class gomokuAI(object):
                                                          
             transfer_steps=[]
             
-            transfer_score, transfer_location = self.alpha_beta_prune(nextPlay, -beta, -alpha)##7022
+            transfer_score, transfer_location, temp_loc_pat_sco = self.alpha_beta_prune(nextPlay, -beta, -alpha)##7022
+            
             temp_score=-transfer_score
             
             transfer_steps += transfer_location#7022
@@ -466,9 +484,10 @@ class gomokuAI(object):
                 
                 if nextPlay.__depth==1:   #7022
                     steps.append(transfer_steps)  #7022
-                    return beta,steps##7022
+                    loc_pat_sco.append(temp_loc_pat_sco)
+                    return beta,steps,loc_pat_sco##7022
                 else:
-                    return beta,transfer_steps##7022
+                    return beta,transfer_steps,temp_loc_pat_sco##7022
                 
             if temp_score > alpha:
                 #print(temp_score,'> alpha:',alpha)#7022
@@ -479,9 +498,11 @@ class gomokuAI(object):
                 
                 if nextPlay.__depth==1:   #7022
                     steps.append(transfer_steps)  #7022
+                    loc_pat_sco.append(temp_loc_pat_sco)
                 else:
                     steps=transfer_steps
-        return alpha,steps ##7022
+                    loc_pat_sco=temp_loc_pat_sco
+        return alpha,steps,loc_pat_sco ##7022
     
         ## no alpha > beta
     
@@ -536,8 +557,44 @@ class gomokuAI(object):
         node = gomokuAI(self.__gomoku, self.__currentState,
                         self.__depth)
         #???????????? will next step be changed
-        score,steps = self.alpha_beta_prune(node)#7022
-        print('steps',steps)#7022
+        score,steps,loc_pat_sco = self.alpha_beta_prune(node)#7022
+        
+        for i in range(len(steps)):
+            if i==0:
+               white_Pattern=loc_pat_sco[len(steps)-1]['white']
+               black_Pattern=loc_pat_sco[len(steps)-1]['black']
+               
+               piece_white=steps[len(steps)-1][2]
+               piece_black=steps[len(steps)-1][3]
+               print('Optimal path:',steps[len(steps)-1]) 
+               print('\nBlack pattern:')
+               print('Locations\t','Pattern\t','Value\t')
+               
+               
+               for temp in black_Pattern:
+                   for coordinate in temp[0]:
+                       #print(coordinate,piece_black)
+                       if coordinate==piece_black:
+                           print('\033[1;34;47m',coordinate,'\033[0m',end='')
+                       else:
+                           print(coordinate,end='')
+                       
+                   print('   ',end='')
+                   
+                   for string in temp[1]:
+                       if string=='black':
+                          print('\033[0;34;47mblack\033[0m',' ',end='')
+                    
+                       else:    
+                          print(string,' ',end='')
+                   print('   ',end='')
+                   print(temp[2])
+            else:   
+               white_Pattern=loc_pat_sco[len(steps)-1-i]['white']
+               black_Pattern=loc_pat_sco[len(steps)-1-i]['black']
+               print('Other path:',steps[len(steps)-1-i],'\nBlack pattern:',black_Pattern, '\nWhite pattern:',white_Pattern) 
+            
+        
         (i, j) = (node.__currentI, node.__currentJ)
         print ('score',score,' loc:',i,'-',j)
         # ??? is the next step an empty position
