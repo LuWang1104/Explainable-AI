@@ -194,7 +194,10 @@ class gomokuAI(object):
                 transfer_currentPattern, transfer_foureSpots= self.direction_pattern(i, j,
                         xdirection, ydirection, state)#7022
                 
+                
                 currentPattern += transfer_currentPattern#7022
+                
+                #print('tranpattern',transfer_currentPattern,'c',currentPattern)
                 
                 fourStore += transfer_foureSpots#7022
                 
@@ -202,11 +205,16 @@ class gomokuAI(object):
                 
                 if len(currentPattern) > 2:
                     currentPattern[1] = state
+                    
+                
+                
                 if enum_to_string(currentPattern) == WHITE_6PATTERNS[0]:
                     
                     return True, fourStore #7022
                 
                 if enum_to_string(currentPattern) == BLACK_6PATTERNS[0]:
+                    
+                    #print('mpd33333333333333rrrrrrrrrrrrrrr',currentPattern)
                     
                     return True, fourStore#7022
                 
@@ -548,62 +556,245 @@ class gomokuAI(object):
                         ## set a move
                         print ('safe')
                         print('unbroken four in a row:',fourStore)#####7022
+                        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
                         #-------!!!!
                         self.__gomoku.set_chessboard_state(i, j,
                                 self.__currentState)
                         return True
-       
+        
         # node is just a class
         node = gomokuAI(self.__gomoku, self.__currentState,
                         self.__depth)
         #???????????? will next step be changed
         score,steps,loc_pat_sco = self.alpha_beta_prune(node)#7022
         
-        for i in range(len(steps)):
-            if i==0:
-               white_Pattern=loc_pat_sco[len(steps)-1]['white']
-               black_Pattern=loc_pat_sco[len(steps)-1]['black']
-               
-               piece_white=steps[len(steps)-1][2]
-               piece_black=steps[len(steps)-1][3]
-               print('Optimal path:',steps[len(steps)-1]) 
-               print('\nBlack pattern:')
-               print('Locations\t','Pattern\t','Value\t')
+        #self.print_explanation(steps,loc_pat_sco)
+        
                
                
-               for temp in black_Pattern:
-                   for coordinate in temp[0]:
-                       #print(coordinate,piece_black)
-                       if coordinate==piece_black:
-                           print('\033[1;34;47m',coordinate,'\033[0m',end='')
-                       else:
-                           print(coordinate,end='')
-                       
-                   print('   ',end='')
-                   
-                   for string in temp[1]:
-                       if string=='black':
-                          print('\033[0;34;47mblack\033[0m',' ',end='')
-                    
-                       else:    
-                          print(string,' ',end='')
-                   print('   ',end='')
-                   print(temp[2])
-            else:   
-               white_Pattern=loc_pat_sco[len(steps)-1-i]['white']
-               black_Pattern=loc_pat_sco[len(steps)-1-i]['black']
-               print('Other path:',steps[len(steps)-1-i],'\nBlack pattern:',black_Pattern, '\nWhite pattern:',white_Pattern) 
+               
             
         
         (i, j) = (node.__currentI, node.__currentJ)
         print ('score',score,' loc:',i,'-',j)
+        
         # ??? is the next step an empty position
+        
         if not i is None and not j is None:
+            
             if self.__gomoku.get_chessboard_state(i, j) \
                 != BoardState.EMPTY:
                 self.one_step()
+                
             else:
+                #7022
+                attackOrDefense, defense_loc_pat_sco=self.threat_evaluate() #7022
+                
+                if attackOrDefense==2:
+                    print('Defense',defense_loc_pat_sco['white'])
+                    
+                #7022   
                 self.__gomoku.set_chessboard_state(i, j,
                         self.__currentState)
+                
+                #7022
+                attackOrDefense, attack_loc_pat_sco=self.threat_evaluate() #7022
+                if attackOrDefense==1:
+                    print('Attack',attack_loc_pat_sco['black'])
+                    
+                self.print_explanation(steps,loc_pat_sco)
+                    
+                
+                #7022
+                
+                
                 return True
+            
         return False
+    
+    def print_explanation(self,steps,loc_pat_sco):
+        
+        for i in range(len(steps)):
+            white_Pattern=loc_pat_sco[len(steps)-1-i]['white']
+            black_Pattern=loc_pat_sco[len(steps)-1-i]['black']
+               
+            piece_white=steps[len(steps)-1-i][2]
+            piece_black=steps[len(steps)-1-i][3]
+            if i==0:
+               
+               print('\033[0;35mOptimal path:\033[0m\n','If next move of black:',
+                     '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
+                     '\033[1;32;47m',piece_white,'\033[0m',) 
+                
+            else:
+              print('\n\n\033[0;31;43mOther path:\033[0m\n','If next move of black:',
+                     '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
+                     '\033[1;32;47m',piece_white,'\033[0m',)  
+               
+            #Black 7022
+            print('\033[1;34;47mBlack Patterns:\033[0m')
+            print('\033[1;33mLocations\t\033[0m','\033[1;33mPattern\t\033[0m','\033[1;33mValue\t\033[0m')
+           
+            
+            forceOpponent=False
+            
+            for temp in black_Pattern:
+               for coordinate in temp[0]:
+                   #print(coordinate,piece_black)
+                   if coordinate==piece_black:
+                       print('\033[1;34;47m',coordinate,'\033[0m',end='')
+                   else:
+                       print(coordinate,end='')
+                   
+               print('   ',end='')
+               
+               for string in temp[1]:
+                   if string=='black':
+                      print('\033[0;34;47mblack\033[0m',' ',end='')
+                
+                   else:    
+                      print(string,' ',end='')
+               print('   ',end='')
+               
+               if temp[2]==5000 or temp[2]==500:
+                   forceOpponent=True
+                   print('\033[1;34;47m',temp[2],'\033[0m')
+                   
+               elif temp[2]==100:
+                   forceOpponent=True
+                   print('\033[1;34m',temp[2],'\033[0m')
+               else:
+                   print(temp[2])
+                   
+            
+               
+               
+            #White 7022
+            print('\033[1;32;47mWhite Patterns:\033[0m')
+            print('\033[1;33mLocations\t\033[0m','\033[1;33mPattern\t\033[0m','\033[1;33mValue\t\033[0m')
+           
+           
+            for temp in white_Pattern:
+               for coordinate in temp[0]:
+                   #print(coordinate,piece_black)
+                   if coordinate==piece_white:
+                       print('\033[1;32;47m',coordinate,'\033[0m',end='')
+                   else:
+                       print(coordinate,end='')
+                   
+               print('   ',end='')
+               
+               for string in temp[1]:
+                   if string=='white':
+                      print('\033[0;32;47mwhite\033[0m',' ',end='')
+                
+                   else:    
+                      print(string,' ',end='')
+               print('   ',end='')
+               print(temp[2])  
+              
+            if forceOpponent==True:
+                break
+    
+    def threat_evaluate(self):
+        '''
+        Return the board score for Minimax Search.
+        '''
+        #exhaustive search
+        vectors = []
+        
+        
+        #row
+        for i in range(N):
+            
+            #7022
+            row_locations=[]
+            for j in range(N):
+                row_locations.append((i,j))
+            #7022    
+                
+            vectors.append((self.__gomoku.get_chessMap()[i],row_locations))#7022
+            
+            
+            
+
+        #column
+        for j in range(N):
+            vectors.append(([self.__gomoku.get_chessMap()[i][j] for i in
+                           range(N)],[(i,j)for i in range(N)])) #7022
+        
+        vectors.append(([self.__gomoku.get_chessMap()[x][x] for x in
+                       range(N)],[(x,x)for x in range(N)]))#7022
+       
+        #
+        for i in range(1, N - 4):
+            # y=x dialogue below
+            v = ([self.__gomoku.get_chessMap()[x][x - i] for x in
+                 range(i, N)],[(x,x-i)for x in range(i, N)]) #7022
+            vectors.append(v)
+            # y=x dialogue above
+            v = ([self.__gomoku.get_chessMap()[y - i][y] for y in
+                 range(i, N)],[(y-i,y) for y in range(i,N)])#7022
+                
+            vectors.append(v)
+
+        vectors.append(([self.__gomoku.get_chessMap()[x][N - x - 1]
+                       for x in range(N)],[(x,N-x-1) for x in range(N)]))#7022
+
+        
+        
+        for i in range(4, N - 1):
+            v = ([self.__gomoku.get_chessMap()[x][i - x] for x in
+                 range(i, -1, -1)],[(x,i-x) for x in range(i,-1,-1)])#7022
+            vectors.append(v)
+            v = ([self.__gomoku.get_chessMap()[x][N - x + N - i - 2]
+                 for x in range(N - i - 1, N)],[(x,N - x + N - i - 2)for x in range(N - i - 1, N)])#7022
+            vectors.append(v)
+
+        #board_score = 0
+
+       
+        loc_pat_sco ={'white':[],'black':[]}
+        
+        attackOrDefense = 0
+        
+        
+        for v in vectors:
+            
+            score,temp_loc_pat_sco = evaluate_vector_addLoc(v)
+            #print('scloc',score,'+',loc,'+',v)
+            
+            #7022
+            for tup in temp_loc_pat_sco['black']:
+                if tup[2]== 5000 or tup[2]== 500:
+                    loc_pat_sco['black'] += tup
+                    attackOrDefense = 1
+                    
+            for tup in temp_loc_pat_sco['white']:
+                if tup[2]== 5000 or tup[2]== 500:
+                    loc_pat_sco['white'] += tup
+                    attackOrDefense = 2
+                    
+                   
+            #7022
+            
+            '''
+            #7022
+            if score['black'] != 0:
+                loc_pat_sco['black'] += temp_loc_pat_sco['black']
+                
+            elif score['white'] != 0:
+                loc_pat_sco['white'] += temp_loc_pat_sco['white']
+            #7022
+            '''
+            
+            '''
+            if self.__currentState == BoardState.WHITE:
+                board_score += score['black'] - score['white']
+            else:
+                board_score += score['white'] - score['black']
+            '''
+        #return board_score,loc_pat_sco       
+        return attackOrDefense,loc_pat_sco
+            
+            
