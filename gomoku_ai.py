@@ -163,7 +163,7 @@ class gomokuAI(object):
                 
                 if axis_count >= 5:
                     
-                    print('Five in a row:','(',i,',',j,') with',fiveSpots)#7022
+                    print('\n\n Gomuku AI make a move','(',i,',',j,')','to form Five in a row:','(',i,',',j,') with',fiveSpots)#7022
                     
                     return True
         return False
@@ -306,6 +306,8 @@ class gomokuAI(object):
 
         frontierZipped = zip(frontierList, frontierScores)
         frontierSorted = sorted(frontierZipped, key=lambda t: t[1])
+        #print('frontierSorted',frontierSorted)
+        
         (frontierList, frontierScores) = zip(*frontierSorted)
         return frontierList
 
@@ -333,9 +335,7 @@ class gomokuAI(object):
                 
             vectors.append((self.__gomoku.get_chessMap()[i],row_locations))#7022
             
-            
-            
-
+        
         #column
         for j in range(N):
             vectors.append(([self.__gomoku.get_chessMap()[i][j] for i in
@@ -432,7 +432,8 @@ class gomokuAI(object):
             vectors.append([self.__gomoku.get_chessMap()[x][N - 1 - x
                            + i + j - N + 1] for x in range(i + j - N
                            + 1, N)])
-
+                
+        # score is the position with empty move 
         point_score = 0
         for v in vectors:
             score = evaluate_vector(v)
@@ -440,6 +441,8 @@ class gomokuAI(object):
                 point_score += score['white']
             else:
                 point_score += score['black']
+                
+        
         return point_score
 
     def alpha_beta_prune(
@@ -458,7 +461,7 @@ class gomokuAI(object):
         if ai.__depth <= 0:
             ## negate min max score
             score,temp_loc_pat_sco = ai.negate()
-            location=((None,None))##7022
+            location=[(None,None)]##7022
             #print('Terminal-Node:','board-score',score*(-1),'node-depth:',ai.__depth)#7022
             return score,location,temp_loc_pat_sco ##7022
         
@@ -473,14 +476,15 @@ class gomokuAI(object):
             ## negate alpha???
             ## Since '-' every time it is different
             ## why - beta, - alpha
-                                                         
-            transfer_steps=[]
             
-            transfer_score, transfer_location, temp_loc_pat_sco = self.alpha_beta_prune(nextPlay, -beta, -alpha)##7022
+            # leaf is                                             
+            #transfer_steps=[]
+            
+            transfer_score, transfer_steps, temp_loc_pat_sco = self.alpha_beta_prune(nextPlay, -beta, -alpha)##7022
             
             temp_score=-transfer_score
             
-            transfer_steps += transfer_location#7022
+            #transfer_steps += transfer_location#7022
             #print('--------',temp_score,'!!!!beta-alpha',beta,alpha,' loc:',i,'-',j, \
                   #nextPlay.__currentState,nextPlay.__depth)
                   
@@ -491,7 +495,10 @@ class gomokuAI(object):
                 transfer_steps.append((i,j))#7022
                 
                 if nextPlay.__depth==1:   #7022
+                    
                     steps.append(transfer_steps)  #7022
+                    #print('steps',steps)
+                    
                     loc_pat_sco.append(temp_loc_pat_sco)
                     return beta,steps,loc_pat_sco##7022
                 else:
@@ -506,6 +513,7 @@ class gomokuAI(object):
                 
                 if nextPlay.__depth==1:   #7022
                     steps.append(transfer_steps)  #7022
+                    #print('steps',steps)
                     loc_pat_sco.append(temp_loc_pat_sco)
                 else:
                     steps=transfer_steps
@@ -531,7 +539,7 @@ class gomokuAI(object):
 
                 ## ??i ,j is a position which could be five in a row,-----!!!1
                 if self.has_checkmate(self.__currentState, i, j):
-                    print ('has checkmate')
+                    #print ('has checkmate')
                     self.__gomoku.set_chessboard_state(i, j,
                             self.__currentState)
                     return True
@@ -545,7 +553,7 @@ class gomokuAI(object):
                 '''
                 TrueOrFalse_hasCheck, fourStore=self.has_check(self.__currentState, i, j)#7022
                 if TrueOrFalse_hasCheck:
-                    print ('has check, checking if opponent already has one...')
+                    print ('\n\n Gomoku AI has check and need to check if opponent already has one checkmate')
 
                     if self.opponent_has_checkmate(self.__currentState) \
                         is True:
@@ -555,9 +563,9 @@ class gomokuAI(object):
                         is False:
                         ## set a move
                         print ('safe')
-                        print('unbroken four in a row:',fourStore)#####7022
-                        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-                        #-------!!!!
+                        print('\n\n Gomuku AI make a move','(',i,',',j,')','to form unbroken four in a row:',fourStore)#####7022
+                        
+                        
                         self.__gomoku.set_chessboard_state(i, j,
                                 self.__currentState)
                         return True
@@ -565,18 +573,16 @@ class gomokuAI(object):
         # node is just a class
         node = gomokuAI(self.__gomoku, self.__currentState,
                         self.__depth)
+        
         #???????????? will next step be changed
         score,steps,loc_pat_sco = self.alpha_beta_prune(node)#7022
         
         #self.print_explanation(steps,loc_pat_sco)
         
-               
-               
-               
-            
+        
         
         (i, j) = (node.__currentI, node.__currentJ)
-        print ('score',score,' loc:',i,'-',j)
+        #print ('\n','\n','\n','score',score,' loc:',i,'-',j)
         
         # ??? is the next step an empty position
         
@@ -587,24 +593,42 @@ class gomokuAI(object):
                 self.one_step()
                 
             else:
-                #7022
-                attackOrDefense, defense_loc_pat_sco=self.threat_evaluate() #7022
                 
-                if attackOrDefense==2:
-                    print('Defense',defense_loc_pat_sco['white'])
+                noAttackNoDefense=True
+                
+                #7022
+                before_move_attackOrDefense, defense_loc_pat_sco=self.threat_evaluate() #7022
+                
+                if before_move_attackOrDefense==2:
+                    print('\n\nMotivation of Gomoku AI: \033[0;35mDefense\033[0m')
+                    optimalMove=(i,j)
                     
-                #7022   
+                    self.loc_pat_sco_print(defense_loc_pat_sco['white'],optimalMove)
+                    
+                    noAttackNoDefense=False
+            
+                #7022  
+                
+                
                 self.__gomoku.set_chessboard_state(i, j,
                         self.__currentState)
                 
+
                 #7022
-                attackOrDefense, attack_loc_pat_sco=self.threat_evaluate() #7022
-                if attackOrDefense==1:
-                    print('Attack',attack_loc_pat_sco['black'])
+                after_move_attackOrDefense, attack_loc_pat_sco=self.threat_evaluate() #7022
+                
+                if after_move_attackOrDefense==1:
+                    print('\n\nMotivation of Gomoku AI: \033[0;35mAttack\033[0m')
+                    optimalMove=(i,j)
+                    self.loc_pat_sco_print(attack_loc_pat_sco['black'],optimalMove)
+                    
+                    noAttackNoDefense=False
+                
+                
+                if noAttackNoDefense==True:
+                    print('\n\nMotivation of Gomoku AI: \033[0;35mNo defense No attack\033[0m')
                     
                 self.print_explanation(steps,loc_pat_sco)
-                    
-                
                 #7022
                 
                 
@@ -612,22 +636,60 @@ class gomokuAI(object):
             
         return False
     
+    def loc_pat_sco_print(self,loc_pat_sco,optimalMove):
+        
+        for temp in loc_pat_sco:
+                       for coordinate in temp[0]:
+                           #print(coordinate,piece_black)
+                           if coordinate==optimalMove:
+                               print(coordinate,end='')
+                               print('\033[1;34m',coordinate,'\033[0m',end='')
+                           else:
+                               print(coordinate,end='')
+                           
+                       print('   ',end='')
+                       
+                       for string in temp[1]:
+                           if string=='black':
+                              print('\033[0;34;47mblack\033[0m',' ',end='')
+                              
+                           elif string=='white':
+                              print('\033[0;32;47mwhite\033[0m',' ',end='')
+                              
+                           else:    
+                              print(string,' ',end='')
+                              
+                       print('   ',end='')
+                       
+                       if temp[2]==50000 or temp[2]==5000 or temp[2]==500 :
+                           
+                           print('\033[1;34;47m',temp[2],'\033[0m')
+                           
+                       elif temp[2]==100:
+                           
+                           print('\033[1;34m',temp[2],'\033[0m')
+                       else:
+                           print(temp[2])
+                           
     def print_explanation(self,steps,loc_pat_sco):
         
         for i in range(len(steps)):
             white_Pattern=loc_pat_sco[len(steps)-1-i]['white']
             black_Pattern=loc_pat_sco[len(steps)-1-i]['black']
-               
-            piece_white=steps[len(steps)-1-i][2]
-            piece_black=steps[len(steps)-1-i][3]
+            
+            #steps like [[None,None,(white,white),(black,black)],[None,None,(white,white),(black,black)],...]
+            piece_white=steps[len(steps)-1-i][1]
+            piece_black=steps[len(steps)-1-i][2]
+            
+            
             if i==0:
                
-               print('\033[0;35mOptimal path:\033[0m\n','If next move of black:',
+               print('\033[0;35mGomku AI selects path:\033[0m\n','If GomokuAI(black) make a move :',
                      '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
                      '\033[1;32;47m',piece_white,'\033[0m',) 
                 
             else:
-              print('\n\n\033[0;31;43mOther path:\033[0m\n','If next move of black:',
+              print('\n\n\033[0;31;43mOther candidate path\033[0m',i,':\n','If next move of black:',
                      '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
                      '\033[1;32;47m',piece_white,'\033[0m',)  
                
@@ -635,7 +697,7 @@ class gomokuAI(object):
             print('\033[1;34;47mBlack Patterns:\033[0m')
             print('\033[1;33mLocations\t\033[0m','\033[1;33mPattern\t\033[0m','\033[1;33mValue\t\033[0m')
            
-            
+            # if it is a force, do not compare with other move
             forceOpponent=False
             
             for temp in black_Pattern:
@@ -691,9 +753,25 @@ class gomokuAI(object):
                    else:    
                       print(string,' ',end='')
                print('   ',end='')
-               print(temp[2])  
-              
-            if forceOpponent==True:
+               
+               if temp[2]==50000 or temp[2]==5000 or temp[2]==500:
+                   forceOpponent=True
+                   print('\033[1;32;47m',temp[2],'\033[0m')
+                   
+               elif temp[2]==100:
+                   forceOpponent=True
+                   print('\033[1;32m',temp[2],'\033[0m')
+                   
+               elif temp[2]==1000000:
+                   forceOpponent=True
+                   print('\033[1;35;47m',temp[2],'\033[0m')
+                   
+               else:
+                   print(temp[2])
+                   
+                
+            #just output two candidate paths  
+            if i >= 2:
                 break
     
     def threat_evaluate(self):
@@ -765,14 +843,16 @@ class gomokuAI(object):
             #print('scloc',score,'+',loc,'+',v)
             
             #7022
+            #5000 and 500 are score of threat sequence
             for tup in temp_loc_pat_sco['black']:
+                
                 if tup[2]== 5000 or tup[2]== 500:
-                    loc_pat_sco['black'] += tup
+                    loc_pat_sco['black'].append(tup)
                     attackOrDefense = 1
                     
             for tup in temp_loc_pat_sco['white']:
                 if tup[2]== 5000 or tup[2]== 500:
-                    loc_pat_sco['white'] += tup
+                    loc_pat_sco['white'].append(tup)
                     attackOrDefense = 2
                     
                    
