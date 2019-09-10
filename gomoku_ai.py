@@ -163,7 +163,7 @@ class gomokuAI(object):
                 
                 if axis_count >= 5:
                     
-                    print('\n\n Gomuku AI make a move','(',i,',',j,')','to form Five in a row:','(',i,',',j,') with',fiveSpots)#7022
+                    print('\n\n Gomoku AI make a move','(',i,',',j,')','to form \033[0;35mFive in a row\033[0m:','(',i,',',j,') with',fiveSpots)#7022
                     
                     return True
         return False
@@ -553,17 +553,17 @@ class gomokuAI(object):
                 '''
                 TrueOrFalse_hasCheck, fourStore=self.has_check(self.__currentState, i, j)#7022
                 if TrueOrFalse_hasCheck:
-                    print ('\n\n Gomoku AI has check and need to check if opponent already has one checkmate')
+                    print ('\n\n Gomoku AI has check and need to check if opponent already has one checkmate:')
 
                     if self.opponent_has_checkmate(self.__currentState) \
                         is True:
 
-                        print ('not safe, searching other moves...')
+                        print ('Not safe,Opponent has checkmat, searching other moves...')
                     elif self.opponent_has_checkmate(self.__currentState) \
                         is False:
                         ## set a move
-                        print ('safe')
-                        print('\n\n Gomuku AI make a move','(',i,',',j,')','to form unbroken four in a row:',fourStore)#####7022
+                        print ('\033[0;35m   Opponent does not have checkmate.\033[0m')
+                        print('\n It is safe for Gomoku to make a move','(',i,',',j,')','to form \033[0;35munbroken four\033[0m in a row:\n',fourStore)#####7022
                         
                         
                         self.__gomoku.set_chessboard_state(i, j,
@@ -594,7 +594,7 @@ class gomokuAI(object):
                 
             else:
                 
-                noAttackNoDefense=True
+                noAttackNoDefense=0
                 
                 #7022
                 before_move_attackOrDefense, defense_loc_pat_sco=self.threat_evaluate() #7022
@@ -605,7 +605,7 @@ class gomokuAI(object):
                     
                     self.loc_pat_sco_print(defense_loc_pat_sco['white'],optimalMove)
                     
-                    noAttackNoDefense=False
+                    noAttackNoDefense=2
             
                 #7022  
                 
@@ -622,10 +622,10 @@ class gomokuAI(object):
                     optimalMove=(i,j)
                     self.loc_pat_sco_print(attack_loc_pat_sco['black'],optimalMove)
                     
-                    noAttackNoDefense=False
+                    noAttackNoDefense=1
                 
                 
-                if noAttackNoDefense==True:
+                if noAttackNoDefense==0:
                     print('\n\nMotivation of Gomoku AI: \033[0;35mNo defense No attack\033[0m')
                     
                 self.print_explanation(steps,loc_pat_sco)
@@ -642,7 +642,7 @@ class gomokuAI(object):
                        for coordinate in temp[0]:
                            #print(coordinate,piece_black)
                            if coordinate==optimalMove:
-                               print(coordinate,end='')
+                               
                                print('\033[1;34m',coordinate,'\033[0m',end='')
                            else:
                                print(coordinate,end='')
@@ -673,6 +673,7 @@ class gomokuAI(object):
                            
     def print_explanation(self,steps,loc_pat_sco):
         
+        optimalSituationScore=0
         for i in range(len(steps)):
             white_Pattern=loc_pat_sco[len(steps)-1-i]['white']
             black_Pattern=loc_pat_sco[len(steps)-1-i]['black']
@@ -684,13 +685,13 @@ class gomokuAI(object):
             
             if i==0:
                
-               print('\033[0;35mGomku AI selects path:\033[0m\n','If GomokuAI(black) make a move :',
-                     '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
+               print('\033[0;35mGomoku AI selects path:\033[0m\n','If GomokuAI(black) make a move :',
+                     '\033[1;34;47m',piece_black,'\033[0m','Optimal move of white:',
                      '\033[1;32;47m',piece_white,'\033[0m',) 
                 
             else:
               print('\n\n\033[0;31;43mOther candidate path\033[0m',i,':\n','If next move of black:',
-                     '\033[1;34;47m',piece_black,'\033[0m','Opitimal move of white:',
+                     '\033[1;34;47m',piece_black,'\033[0m','Optimal move of white:',
                      '\033[1;32;47m',piece_white,'\033[0m',)  
                
             #Black 7022
@@ -700,7 +701,12 @@ class gomokuAI(object):
             # if it is a force, do not compare with other move
             forceOpponent=False
             
+            #collect score 
+            blackScore=0
             for temp in black_Pattern:
+                
+               blackScore += temp[2]
+               
                for coordinate in temp[0]:
                    #print(coordinate,piece_black)
                    if coordinate==piece_black:
@@ -727,6 +733,8 @@ class gomokuAI(object):
                    print('\033[1;34m',temp[2],'\033[0m')
                else:
                    print(temp[2])
+               
+               
                    
             
                
@@ -735,8 +743,10 @@ class gomokuAI(object):
             print('\033[1;32;47mWhite Patterns:\033[0m')
             print('\033[1;33mLocations\t\033[0m','\033[1;33mPattern\t\033[0m','\033[1;33mValue\t\033[0m')
            
-           
+            whiteScore=0
+            
             for temp in white_Pattern:
+               whiteScore += temp[2]
                for coordinate in temp[0]:
                    #print(coordinate,piece_black)
                    if coordinate==piece_white:
@@ -768,10 +778,22 @@ class gomokuAI(object):
                    
                else:
                    print(temp[2])
-                   
+            
+            score = blackScore - whiteScore
+            if i == 0:
+                optimalSituationScore=score
                 
-            #just output two candidate paths  
-            if i >= 2:
+            if i != 0:
+                print('\033[0;31mConclusion:\033[0m')
+                print('\033[0;31mblackScoreSum - whiteScoreSum =',score, \
+                            'which is smaller than Optimal path:' ,optimalSituationScore,'\033[0m' ) 
+            else:
+                print('\033[0;31mConclusion:\033[0m')
+                print('\033[0;31mblackScoreSum - whiteScoreSum =',score,'\033[0m')
+               
+            #just output two candidate paths 
+            #2 represent defense
+            if i >= 2 :
                 break
     
     def threat_evaluate(self):
